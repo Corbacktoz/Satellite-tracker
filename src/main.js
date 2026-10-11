@@ -16,6 +16,9 @@ import { WorldMapTracker2D } from './map2d.js';
 import { isViasatSatellite, isOperationalLBandSatellite, fleetInfo, fleetCategories, fleetSources, fleet, isPointInCoverage } from '../shared/catalogue.js';
 import './style.css';
 
+const baseUrl = import.meta.env.BASE_URL || './';
+const cleanBase = baseUrl.endsWith('/') ? baseUrl : baseUrl + '/';
+
 const icon = name => `<i data-lucide="${name}"></i>`;
 
 // Stations sol observateur prédéfinies
@@ -392,14 +395,14 @@ function initGlobe() {
     const maxAnisotropy = renderer.capabilities.getMaxAnisotropy();
     const loader = new THREE.TextureLoader();
 
-    const map = loader.load('/textures/earth.jpg');
+    const map = loader.load(`${cleanBase}textures/earth.jpg`);
     map.colorSpace = THREE.SRGBColorSpace;
     map.anisotropy = maxAnisotropy;
 
-    const specularMap = loader.load('/textures/specular.jpg');
+    const specularMap = loader.load(`${cleanBase}textures/specular.jpg`);
     specularMap.anisotropy = maxAnisotropy;
 
-    const normalMap = loader.load('/textures/normal.jpg');
+    const normalMap = loader.load(`${cleanBase}textures/normal.jpg`);
     normalMap.anisotropy = maxAnisotropy;
 
     earth = new THREE.Mesh(
@@ -968,9 +971,29 @@ async function load() {
   $('#source-text').textContent = 'Téléchargement de la flotte Bande L…';
 
   try {
-    const response = await fetch('/api/satellites', { signal: AbortSignal.timeout(16000) });
-    if (!response.ok) throw new Error();
-    const payload = await response.json();
+    let payload = null;
+    try {
+      const response = await fetch('/api/satellites', { signal: AbortSignal.timeout(8000) });
+      if (response.ok) {
+        payload = await response.json();
+      }
+    } catch {}
+
+    if (!payload || !Array.isArray(payload.items) || !payload.items.length) {
+      const fallbackUrl = `${cleanBase}data/fleet-viasat.json`;
+      const fallbackRes = await fetch(fallbackUrl);
+      if (!fallbackRes.ok) throw new Error('Impossible de charger les données orbitales');
+      const rawFallback = await fallbackRes.json();
+      payload = {
+        items: rawFallback.map(item => ({ ...item, DATA_SOURCE: 'fallback' })),
+        live: false,
+        allLive: false,
+        degraded: true,
+        degradedSources: ['static'],
+        liveSources: [],
+        fetchedAt: null
+      };
+    }
 
     let valid = [];
     for (const data of payload.items) {

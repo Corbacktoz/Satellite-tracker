@@ -1,6 +1,9 @@
 import { calculateFootprint } from './spot.js';
 import { groundStations, fleetInfo } from '../shared/catalogue.js';
 
+const baseUrl = (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.BASE_URL) || './';
+const cleanBase = baseUrl.endsWith('/') ? baseUrl : baseUrl + '/';
+
 export function computeSubSolarCoordinates(d) {
   const date = d || new Date();
   const utcHours = date.getUTCHours() + date.getUTCMinutes() / 60 + date.getUTCSeconds() / 3600;
@@ -100,7 +103,7 @@ export class WorldMapTracker2D {
       this.earthImgLoaded = false;
       this.render();
     };
-    this.earthImg.src = '/textures/earth.jpg';
+    this.earthImg.src = `${cleanBase}textures/earth.jpg`;
     if (this.earthImg.complete && this.earthImg.naturalWidth > 0) {
       this.earthImgLoaded = true;
     }
@@ -154,7 +157,7 @@ export class WorldMapTracker2D {
   // Chargement asynchrone du GeoJSON mondial vectoriel HD
   async loadGeoJson() {
     try {
-      const res = await fetch('/data/world-110m.geojson');
+      const res = await fetch(`${cleanBase}data/world-110m.geojson`);
       if (!res.ok) throw new Error('GeoJSON status ' + res.status);
       const data = await res.json();
       const rings = [];
