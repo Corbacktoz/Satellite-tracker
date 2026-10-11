@@ -191,4 +191,5 @@ fleetMap.drawSlide5FleetCoverage(canvas);
 assert.equal(footprintCalls.length, 3, 'Le spot sélectionné n’est pas dessiné deux fois');
 console.log('Empreintes de flotte 2D : position propagée, altitude, évolution et zone indicative vérifiées.');
 await import('./check-data.mjs');
+await import('./check-spots.mjs');
 

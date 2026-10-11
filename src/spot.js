@@ -248,7 +248,9 @@ export class SatelliteSpotVisualizer {
     const rSurface = 1.003;
     const rLine = 1.0042;
     const segments = 128;
-    const numRings = 8;
+    // Limiter le pas radial à 2° : les faces planes restent au-dessus
+    // du globe, même pour les grandes calottes de visibilité GEO.
+    const numRings = Math.max(8, Math.ceil(thetaRad / THREE.MathUtils.degToRad(2)));
 
     // Base orthonormée u, v perpendiculaire à n
     const n = nadirDir.clone().normalize();
